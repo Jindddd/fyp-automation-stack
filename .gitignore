@@ -1,0 +1,43 @@
+# ========================
+# Environment & secrets
+# ========================
+.env
+.env.*
+*.env
+env/
+.venv/
+venv/
+
+# ========================
+# NetBox
+# ========================
+netbox-docker/env/
+netbox-docker/media/
+netbox-docker/configuration/credentials/
+netbox-docker/configuration/ldap_config.py
+netbox-docker/**/data/
+netbox-docker/**/volumes/
+netbox-docker/docker-compose.override.yml
+
+# ========================
+# Semaphore
+# ========================
+semaphore/.env
+semaphore/db/
+semaphore/tmp/
+semaphore/data/
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+
+# ========================
+# Logs / OS / Editor
+# ========================
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
