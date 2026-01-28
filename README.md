@@ -14,23 +14,21 @@ The integration allows you to manage your network infrastructure in NetBox and a
 ## Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│     FYP Automation Stack                │
-├─────────────────────────────────────────┤
-│                                         │
-│  ┌──────────────┐  ┌─────────────────┐ │
-│  │   NetBox     │  │   Semaphore     │ │
-│  │   (IPAM/     │  │   (Ansible      │ │
-│  │    DCIM)     │  │    Automation)  │ │
-│  └──────┬───────┘  └────────┬────────┘ │
-│         │                    │          │
-│         └────────┬───────────┘          │
-│                  │                      │
-│         ┌────────▼─────────┐            │
-│         │    PostgreSQL    │            │
-│         │    (Database)    │            │
-│         └──────────────────┘            │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│       FYP Automation Stack                   │
+├──────────────────────────────────────────────┤
+│                                              │
+│  ┌──────────────┐      ┌─────────────────┐  │
+│  │   NetBox     │      │   Semaphore     │  │
+│  │   (IPAM/     │      │   (Ansible      │  │
+│  │    DCIM)     │      │    Automation)  │  │
+│  └──────┬───────┘      └────────┬────────┘  │
+│         │                        │           │
+│  ┌──────▼──────┐        ┌────────▼────────┐ │
+│  │ PostgreSQL  │        │   PostgreSQL    │ │
+│  │ (NetBox DB) │        │ (Semaphore DB)  │ │
+│  └─────────────┘        └─────────────────┘ │
+└──────────────────────────────────────────────┘
 ```
 
 ## Components
@@ -180,14 +178,21 @@ Example Ansible playbook to query NetBox from Semaphore:
 - name: Get devices from NetBox
   hosts: localhost
   gather_facts: no
+  vars:
+    netbox_url: "http://localhost:8000"
+    netbox_token: "your-netbox-api-token"
   tasks:
-    - name: Query NetBox for devices
+    - name: Get all devices with "router" in the name
       netbox.netbox.nb_lookup:
-        api_endpoint: "http://localhost:8000"
-        api_version: "3.0"
-        token: "your-netbox-api-token"
-        plugin: nb_lookup
-        api_filter: "name__ic=router"
+        api_endpoint: "{{ netbox_url }}"
+        token: "{{ netbox_token }}"
+        plugin: netbox.netbox.nb_lookup
+        api_filter: "dcim.devices?name__ic=router"
+      register: netbox_devices
+    
+    - name: Display device information
+      debug:
+        var: netbox_devices
 ```
 
 ## Configuration
@@ -205,6 +210,15 @@ The following environment variables can be configured in `semaphore/.env`:
 | `DB_HOST` | Database service name | `postgres` |
 | `DB_PORT` | PostgreSQL port | `5432` |
 | `ADMIN_PASSWORD` | Semaphore admin password | (Required) |
+
+**Note:** The `SEMAPHORE_ACCESS_KEY_ENCRYPTION` variable is set in `docker-compose.yml`. For production deployments, generate a new 32-byte base64-encoded key:
+
+```bash
+# Generate a secure encryption key
+openssl rand -base64 32
+```
+
+Then update the value in `semaphore/docker-compose.yml`.
 
 #### NetBox
 
